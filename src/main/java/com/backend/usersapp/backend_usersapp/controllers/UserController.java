@@ -19,7 +19,7 @@ import com.backend.usersapp.backend_usersapp.models.entities.User;
 import com.backend.usersapp.backend_usersapp.services.UserService;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 // @CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
 
