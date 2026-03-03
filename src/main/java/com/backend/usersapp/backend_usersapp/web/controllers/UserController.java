@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.usersapp.backend_usersapp.domain.services.UserService;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/users")
 // @CrossOrigin(origins = "http://localhost:5173")
@@ -56,12 +58,12 @@ public class UserController {
     //     return userService.save(user);
     // }
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody User user) {
+    public ResponseEntity<?> create(@RequestBody @Valid User user) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(user)); // 201 Created
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@RequestBody User user, @PathVariable Long id) {
+    public ResponseEntity<?> update(@RequestBody @Valid User user, @PathVariable Long id) {
         Optional<User> userOptional = userService.update(user, id);
         if (userOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(userOptional.orElseThrow()); // 201 Created
