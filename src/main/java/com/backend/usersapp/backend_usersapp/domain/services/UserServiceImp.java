@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.usersapp.backend_usersapp.domain.exception.EmailAlreadyExistsException;
+import com.backend.usersapp.backend_usersapp.domain.exception.UserAlreadyExistsException;
+import com.backend.usersapp.backend_usersapp.domain.exception.UserNotFoundException;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
 import com.backend.usersapp.backend_usersapp.reposotories.UserRepository;
 
@@ -19,6 +22,16 @@ public class UserServiceImp implements UserService {
     @Override
     @Transactional
     public User save(User user) {
+        // Verificar si ya existe un usuario con el mismo nombre de usuario, si es así, 
+        // lanzar una excepción UserAlreadyExistsException para evitar duplicados en la base de datos
+        if (this.userRepository.findFirstByUsername(user.getUsername()) != null) {
+            throw new UserAlreadyExistsException(user.getUsername());
+        }
+
+        if (this.userRepository.findFirstByEmail(user.getEmail()) != null) {
+            throw new EmailAlreadyExistsException(user.getEmail());
+        }
+
         userRepository.save(user);
         return user;
     }
@@ -38,6 +51,18 @@ public class UserServiceImp implements UserService {
     @Override
     @Transactional
     public Optional<User> update(User user, Long id) {
+        if (this.userRepository.findFirstByUsername(user.getUsername()) != null) {
+            throw new UserAlreadyExistsException(user.getUsername());
+        }
+
+        if (this.userRepository.findFirstByEmail(user.getEmail()) != null) {
+            throw new EmailAlreadyExistsException(user.getEmail());
+        }
+
+        if (this.userRepository.findFirstById(id) == null) {
+            throw new UserNotFoundException(id);
+        }
+
         Optional<User> o = this.findById(id);
         User userOptional = null;
         if (o.isPresent()) {
@@ -52,6 +77,10 @@ public class UserServiceImp implements UserService {
     @Override
     @Transactional
     public void deleteById(Long id) {
+        if (this.userRepository.findFirstById(id) == null) {
+            throw new UserNotFoundException(id);
+        }
+
         userRepository.deleteById(id);
     }
 
