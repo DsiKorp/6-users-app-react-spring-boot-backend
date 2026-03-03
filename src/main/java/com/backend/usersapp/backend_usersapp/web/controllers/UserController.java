@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.usersapp.backend_usersapp.domain.services.UserService;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
+import com.backend.usersapp.backend_usersapp.web.exception.Error;
+import com.backend.usersapp.backend_usersapp.web.exception.ValidationErrorResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -35,7 +37,15 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping
+    @GetMapping(produces = "application/json")
+    @Operation(
+            summary = "Get all users",
+            description = "Returns the complete list of users.",
+            responses = {
+                @ApiResponse(responseCode = "200", description = "Users found",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = User[].class)))
+            }
+    )
     public List<User> list() {
         return userService.findAll();
     }
@@ -76,13 +86,39 @@ public class UserController {
     // public User create(@RequestBody User user) {
     //     return userService.save(user);
     // }
-    @PostMapping
-    public ResponseEntity<?> create(@RequestBody @Valid User user) {
+    @PostMapping(produces = "application/json")
+    @Operation(
+            summary = "Create a new user",
+            description = "Creates a user with the provided information.",
+            responses = {
+                @ApiResponse(responseCode = "201", description = "User created",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
+                @ApiResponse(responseCode = "400", description = "Validation error",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationErrorResponse.class))),
+                @ApiResponse(responseCode = "409", description = "Username or email already exists",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+            }
+    )
+    public ResponseEntity<User> create(@RequestBody @Valid User user) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(user)); // 201 Created
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> update(@RequestBody @Valid User user, @Parameter(description = "ID of the user to be updated", example = "1") @PathVariable Long id) {
+    @PutMapping(value = "/{id}", produces = "application/json")
+    @Operation(
+            summary = "Update an existing user",
+            description = "Updates user data by identifier.",
+            responses = {
+                @ApiResponse(responseCode = "201", description = "User updated",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
+                @ApiResponse(responseCode = "400", description = "Validation error",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationErrorResponse.class))),
+                @ApiResponse(responseCode = "404", description = "User not found",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
+                @ApiResponse(responseCode = "409", description = "Username or email already exists",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+            }
+    )
+    public ResponseEntity<User> update(@RequestBody @Valid User user, @Parameter(description = "ID of the user to be updated", example = "1") @PathVariable Long id) {
         Optional<User> userOptional = userService.update(user, id);
         if (userOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(userOptional.orElseThrow()); // 201 Created
@@ -90,8 +126,17 @@ public class UserController {
         return ResponseEntity.notFound().build(); // 404
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteById(@Parameter(description = "ID of the user to be deleted") @PathVariable Long id) {
+    @DeleteMapping(value = "/{id}", produces = "application/json")
+    @Operation(
+            summary = "Delete a user by its identifier",
+            description = "Deletes a user that matches the sent identifier.",
+            responses = {
+                @ApiResponse(responseCode = "204", description = "User deleted", content = @Content),
+                @ApiResponse(responseCode = "404", description = "User not found",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+            }
+    )
+    public ResponseEntity<Void> deleteById(@Parameter(description = "ID of the user to be deleted", example = "1") @PathVariable Long id) {
         userService.deleteById(id);
         return ResponseEntity.noContent().build(); // 204
     }
