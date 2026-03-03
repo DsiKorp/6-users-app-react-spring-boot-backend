@@ -1,4 +1,4 @@
-package com.backend.usersapp.backend_usersapp.services;
+package com.backend.usersapp.backend_usersapp.domain.services;
 
 import java.util.List;
 import java.util.Optional;

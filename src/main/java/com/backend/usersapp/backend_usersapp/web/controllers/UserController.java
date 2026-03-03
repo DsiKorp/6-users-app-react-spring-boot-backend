@@ -1,4 +1,4 @@
-package com.backend.usersapp.backend_usersapp.controllers;
+package com.backend.usersapp.backend_usersapp.web.controllers;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.backend.usersapp.backend_usersapp.domain.services.UserService;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
-import com.backend.usersapp.backend_usersapp.services.UserService;
 
 @RestController
 @RequestMapping("/users")

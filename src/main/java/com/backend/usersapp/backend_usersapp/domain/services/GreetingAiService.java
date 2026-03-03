@@ -1,4 +1,4 @@
-package com.backend.usersapp.backend_usersapp.services;
+package com.backend.usersapp.backend_usersapp.domain.services;
 
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
