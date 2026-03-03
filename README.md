@@ -104,10 +104,10 @@ entorno:
 
 ```env
 # MySQL (docker-compose)
-MYSQL_ROOT_PASSWORD=LaRooteada2020
+MYSQL_ROOT_PASSWORD=passwordRootDb
 MYSQL_DATABASE=db_users_springboot
-MYSQL_USER=juan
-MYSQL_PASSWORD=Docker2020E
+MYSQL_USER=userDb
+MYSQL_PASSWORD=passwdDb
 
 # Datasource Spring
 SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/db_users_springboot
