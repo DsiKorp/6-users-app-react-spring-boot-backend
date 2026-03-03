@@ -18,11 +18,18 @@ import org.springframework.web.bind.annotation.RestController;
 import com.backend.usersapp.backend_usersapp.domain.services.UserService;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
 // @CrossOrigin(origins = "http://localhost:5173")
+@Tag(name = "Users", description = "user-controller: Operations about users of the application") // Swagger
 public class UserController {
 
     @Autowired
@@ -33,15 +40,27 @@ public class UserController {
         return userService.findAll();
     }
 
-    @GetMapping("/{id}")
-    // name = "id" is optional, but it is a good practice to use it for better readability
-    // ResponseEntity is a wrapper for the response, it allows us to return different 
-    //  status codes and headers
-    public ResponseEntity<?> show(@PathVariable(name = "id") Long id) {
-        // We use Optional to handle the case when the user is not found, 
-        // it allows us to return a 404 Not Found response
-        // Optional is a container object which may or may not contain a non-null value. 
-        // If a value is present, isPresent() will return true and get() will return the value.
+    /* 
+        - ResponseEntity is a wrapper for the response, it allows us to return different 
+        status codes and headers
+        - @PathVariable(name = "id") is optional, it is used to specify the name of the path variable, 
+        if it is not specified, it will be the same as the parameter name (id in this case)
+        - We use Optional to handle the case when the user is not found, 
+        it allows us to return a 404 Not Found response
+        - Optional is a container object which may or may not contain a non-null value. 
+        If a value is present, isPresent() will return true and get() will return the value.
+     */
+    @GetMapping(value = "/{id}", produces = "application/json")
+    @Operation(
+            summary = "Get a user by its identifier",
+            description = "Returns a user that matches the sent identifier.",
+            responses = {
+                @ApiResponse(responseCode = "200", description = "User found",
+                        content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
+                @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
+            }
+    )
+    public ResponseEntity<User> show(@Parameter(description = "ID of the user to be retrieved", example = "1") @PathVariable(name = "id") Long id) {
         Optional<User> userOptional = userService.findById(id);
 
         if (userOptional.isPresent()) {
@@ -63,7 +82,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@RequestBody @Valid User user, @PathVariable Long id) {
+    public ResponseEntity<?> update(@RequestBody @Valid User user, @Parameter(description = "ID of the user to be updated", example = "1") @PathVariable Long id) {
         Optional<User> userOptional = userService.update(user, id);
         if (userOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(userOptional.orElseThrow()); // 201 Created
@@ -72,7 +91,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteById(@PathVariable Long id) {
+    public ResponseEntity<?> deleteById(@Parameter(description = "ID of the user to be deleted") @PathVariable Long id) {
         userService.deleteById(id);
         return ResponseEntity.noContent().build(); // 204
     }
