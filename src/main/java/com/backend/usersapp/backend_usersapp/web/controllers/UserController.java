@@ -71,12 +71,18 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteById(@PathVariable Long id) {
-        Optional<User> o = userService.findById(id);
-
-        if (o.isPresent()) {
-            userService.deleteById(id);
-            return ResponseEntity.noContent().build(); // 204
-        }
-        return ResponseEntity.notFound().build(); // 404
+        userService.deleteById(id);
+        return ResponseEntity.noContent().build(); // 204
     }
+
+    // esta implementación no lanza el user-not-found exception, sino que devuelve un 404 Not Found si el usuario no existe, 
+    //@DeleteMapping("/{id}")
+    // public ResponseEntity<?> deleteById2(@PathVariable Long id) {
+    //     Optional<User> o = userService.findById(id);
+    //     if (o.isPresent()) {
+    //         userService.deleteById(id);
+    //         return ResponseEntity.noContent().build(); // 204
+    //     }
+    //     return ResponseEntity.notFound().build(); // 404
+    // }
 }
