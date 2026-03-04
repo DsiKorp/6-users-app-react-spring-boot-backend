@@ -1,6 +1,7 @@
 package com.backend.usersapp.backend_usersapp.web.controllers;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +16,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/hello")
+//@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 @Tag(name = "Hello", description = "hello-controller: Greeting endpoint")
 public class HelloController {
 

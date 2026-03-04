@@ -15,9 +15,9 @@ public interface GreetingAiService {
     String generateGreeting(@V("plataform") String plataform);
 
     @SystemMessage("""
-            Eres un experto en cine que recomienda películas personalizadas según los gustos del usuario.
-            Debes recomendar máximo 3 películas.
-            No incluyas películas que estén por fuera de la plataforma PlatziPlay.
+            Eres un experto en seguridad informática que recomienda nombres de usuario (users names) que no existan en la base de datos.
+            Debes recomendar máximo 5 nombres de usuario y no deben contener letras mayúsculas ni tildes.
+            No incluyas nombres de usuario que estén en la plataforma Users App.
             """)
-    String generateMoviesSuggestion(@UserMessage String userMessage);
+    String generateUserNameSuggestion(@UserMessage String userMessage);
 }
