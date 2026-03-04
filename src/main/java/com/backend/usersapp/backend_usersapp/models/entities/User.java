@@ -20,7 +20,7 @@ public class User {
 
     @Column(nullable = false, length = 40, unique = true)
     @NotBlank(message = "El username es obligatorio")
-    @Size(max = 40, message = "El username no puede tener más de 40 caracteres")
+    @Size(min = 4, max = 40, message = "El username debe tener entre 4 y 40 caracteres")
     private String username;
 
     @Column(nullable = false, length = 100, unique = true)

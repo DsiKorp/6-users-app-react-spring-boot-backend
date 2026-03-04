@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.backend.usersapp.backend_usersapp.domain.exception.DuplicateUserFieldsException;
 import com.backend.usersapp.backend_usersapp.domain.exception.EmailAlreadyExistsException;
 import com.backend.usersapp.backend_usersapp.domain.exception.UserAlreadyExistsException;
 import com.backend.usersapp.backend_usersapp.domain.exception.UserNotFoundException;
@@ -28,6 +29,23 @@ public class RestExceptionHandler {
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<Error> handleException(EmailAlreadyExistsException ex) {
         Error error = new Error("email-already-exists", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(DuplicateUserFieldsException.class)
+    public ResponseEntity<ValidationErrorResponse> handleException(DuplicateUserFieldsException ex) {
+        List<ValidationFieldError> errors = ex.getDuplicateFields()
+                .stream()
+                .map(duplicateField -> new ValidationFieldError(duplicateField.field(), duplicateField.message()))
+                .sorted(Comparator.comparing(ValidationFieldError::field, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(ValidationFieldError::message, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .toList();
+
+        ValidationErrorResponse error = new ValidationErrorResponse(
+                "duplicate-data-error",
+                "Se encontraron datos de usuario ya registrados",
+                errors);
+
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 

@@ -1,5 +1,6 @@
 package com.backend.usersapp.backend_usersapp.domain.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -7,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.backend.usersapp.backend_usersapp.domain.exception.EmailAlreadyExistsException;
-import com.backend.usersapp.backend_usersapp.domain.exception.UserAlreadyExistsException;
+import com.backend.usersapp.backend_usersapp.domain.exception.DuplicateUserFieldsException;
+import com.backend.usersapp.backend_usersapp.domain.exception.DuplicateUserFieldsException.DuplicateField;
 import com.backend.usersapp.backend_usersapp.domain.exception.UserNotFoundException;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
 import com.backend.usersapp.backend_usersapp.reposotories.UserRepository;
@@ -24,15 +25,7 @@ public class UserServiceImp implements UserService {
     @Override
     @Transactional
     public User save(User user) {
-        // Verificar si ya existe un usuario con el mismo nombre de usuario, si es así, 
-        // lanzar una excepción UserAlreadyExistsException para evitar duplicados en la base de datos
-        if (this.userRepository.findFirstByUsername(user.getUsername()) != null) {
-            throw new UserAlreadyExistsException(user.getUsername());
-        }
-
-        if (this.userRepository.findFirstByEmail(user.getEmail()) != null) {
-            throw new EmailAlreadyExistsException(user.getEmail());
-        }
+        validateDuplicatedData(user, null);
 
         userRepository.save(user);
         return user;
@@ -61,19 +54,45 @@ public class UserServiceImp implements UserService {
             throw new UserNotFoundException(id);
         }
 
-        if (this.userRepository.findFirstByUsernameAndIdNot(user.getUsername(), id) != null) {
-            throw new UserAlreadyExistsException(user.getUsername());
-        }
-
-        if (this.userRepository.findFirstByEmailAndIdNot(user.getEmail(), id) != null) {
-            throw new EmailAlreadyExistsException(user.getEmail());
-        }
+        validateDuplicatedData(user, id);
 
         User userDb = userOptional.orElseThrow();
         userDb.setUsername(user.getUsername());
         userDb.setEmail(user.getEmail());
-        userDb.setPassword(user.getPassword());
+        //userDb.setPassword(user.getPassword());
         return Optional.of(this.userRepository.save(userDb));
+    }
+
+    private void validateDuplicatedData(User user, Long excludedUserId) {
+        List<DuplicateField> duplicateFields = new ArrayList<>();
+
+        if (isUsernameTaken(user.getUsername(), excludedUserId)) {
+            duplicateFields.add(new DuplicateField("username", "El nombre de usuario '" + user.getUsername() + "' ya existe"));
+        }
+
+        if (isEmailTaken(user.getEmail(), excludedUserId)) {
+            duplicateFields.add(new DuplicateField("email", "El correo '" + user.getEmail() + "' ya existe"));
+        }
+
+        if (!duplicateFields.isEmpty()) {
+            throw new DuplicateUserFieldsException(duplicateFields);
+        }
+    }
+
+    private boolean isUsernameTaken(String username, Long excludedUserId) {
+        if (excludedUserId == null) {
+            return this.userRepository.findFirstByUsername(username) != null;
+        }
+
+        return this.userRepository.findFirstByUsernameAndIdNot(username, excludedUserId) != null;
+    }
+
+    private boolean isEmailTaken(String email, Long excludedUserId) {
+        if (excludedUserId == null) {
+            return this.userRepository.findFirstByEmail(email) != null;
+        }
+
+        return this.userRepository.findFirstByEmailAndIdNot(email, excludedUserId) != null;
     }
 
     @Override
