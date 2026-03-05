@@ -124,7 +124,7 @@
           }
         },
         {
-          "name": "Create user (duplicate 409)",
+          "name": "Create user (duplicate username y email 409)",
           "request": {
             "method": "POST",
             "header": [
@@ -149,6 +149,31 @@
           }
         },
         {
+          "name": "Create user (duplicate username 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"email\": \"correo_unico_para_test_409@example.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          }
+        },
+        {
           "name": "Update user",
           "request": {
             "method": "PUT",
@@ -160,7 +185,59 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"usuario_actualizado\",\n  \"email\": \"usuario_actualizado@example.com\",\n  \"password\": \"password123\"\n}"
+              "raw": "{\n  \"username\": \"usuario_actualizado\",\n  \"email\": \"usuario_actualizado@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update user (duplicate username y email 409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"email\": \"admin@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update user (duplicate email 409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"username_unico_para_test_409\",\n  \"email\": \"admin@example.com\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}",

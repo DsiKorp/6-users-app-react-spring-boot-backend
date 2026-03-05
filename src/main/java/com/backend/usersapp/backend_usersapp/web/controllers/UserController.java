@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.usersapp.backend_usersapp.domain.dto.SuggestRequestDto;
+import com.backend.usersapp.backend_usersapp.domain.dto.UserUpdateDto;
 import com.backend.usersapp.backend_usersapp.domain.services.GreetingAiService;
 import com.backend.usersapp.backend_usersapp.domain.services.UserService;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
@@ -26,6 +27,7 @@ import com.backend.usersapp.backend_usersapp.web.exception.ValidationErrorRespon
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -93,7 +95,10 @@ public class UserController {
     @Operation(summary = "Create a new user", description = "Creates a user with the provided information.", responses = {
         @ApiResponse(responseCode = "201", description = "User created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
         @ApiResponse(responseCode = "400", description = "Validation error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationErrorResponse.class))),
-        @ApiResponse(responseCode = "409", description = "Username or email already exists", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+        @ApiResponse(responseCode = "409", description = "Username or email already exists", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationErrorResponse.class), examples = {
+            @ExampleObject(name = "Username y email duplicados", value = "{\n  \"type\": \"duplicate-data-error\",\n  \"message\": \"Se encontraron datos de usuario ya registrados\",\n  \"errors\": [\n    {\n      \"field\": \"username\",\n      \"message\": \"El nombre de usuario 'hola2' ya existe\"\n    },\n    {\n      \"field\": \"email\",\n      \"message\": \"El correo 'hola2@mail.com' ya existe\"\n    }\n  ]\n}"),
+            @ExampleObject(name = "Solo username duplicado", value = "{\n  \"type\": \"duplicate-data-error\",\n  \"message\": \"Se encontraron datos de usuario ya registrados\",\n  \"errors\": [\n    {\n      \"field\": \"username\",\n      \"message\": \"El nombre de usuario 'hola2' ya existe\"\n    }\n  ]\n}")
+        }))
     })
     public ResponseEntity<User> create(@RequestBody @Valid User user) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(user)); // 201 Created
@@ -113,11 +118,14 @@ public class UserController {
         @ApiResponse(responseCode = "201", description = "User updated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
         @ApiResponse(responseCode = "400", description = "Validation error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationErrorResponse.class))),
         @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class))),
-        @ApiResponse(responseCode = "409", description = "Username or email already exists", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Error.class)))
+        @ApiResponse(responseCode = "409", description = "Username or email already exists", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationErrorResponse.class), examples = {
+            @ExampleObject(name = "Username y email duplicados", value = "{\n  \"type\": \"duplicate-data-error\",\n  \"message\": \"Se encontraron datos de usuario ya registrados\",\n  \"errors\": [\n    {\n      \"field\": \"username\",\n      \"message\": \"El nombre de usuario 'hola2' ya existe\"\n    },\n    {\n      \"field\": \"email\",\n      \"message\": \"El correo 'hola2@mail.com' ya existe\"\n    }\n  ]\n}"),
+            @ExampleObject(name = "Solo email duplicado", value = "{\n  \"type\": \"duplicate-data-error\",\n  \"message\": \"Se encontraron datos de usuario ya registrados\",\n  \"errors\": [\n    {\n      \"field\": \"email\",\n      \"message\": \"El correo 'hola2@mail.com' ya existe\"\n    }\n  ]\n}")
+        }))
     })
-    public ResponseEntity<User> update(@RequestBody @Valid User user,
+    public ResponseEntity<User> update(@RequestBody @Valid UserUpdateDto userUpdateDto,
             @Parameter(description = "ID of the user to be updated", example = "1") @PathVariable Long id) {
-        Optional<User> userOptional = userService.update(user, id);
+        Optional<User> userOptional = userService.update(userUpdateDto, id);
         if (userOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(userOptional.orElseThrow()); // 201
             // Created

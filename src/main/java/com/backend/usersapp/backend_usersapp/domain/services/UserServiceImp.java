@@ -8,10 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.usersapp.backend_usersapp.domain.dto.UserUpdateDto;
 import com.backend.usersapp.backend_usersapp.domain.exception.DuplicateUserFieldsException;
 import com.backend.usersapp.backend_usersapp.domain.exception.DuplicateUserFieldsException.DuplicateField;
 import com.backend.usersapp.backend_usersapp.domain.exception.UserNotFoundException;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
+import com.backend.usersapp.backend_usersapp.persistence.mapper.UserMapper;
 import com.backend.usersapp.backend_usersapp.reposotories.UserRepository;
 
 import dev.langchain4j.agent.tool.Tool;
@@ -21,6 +23,9 @@ public class UserServiceImp implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     @Transactional
@@ -48,30 +53,41 @@ public class UserServiceImp implements UserService {
 
     @Override
     @Transactional
-    public Optional<User> update(User user, Long id) {
+    public Optional<User> update(UserUpdateDto userUpdateDto, Long id) {
         Optional<User> userOptional = this.findById(id);
         if (userOptional.isEmpty()) {
             throw new UserNotFoundException(id);
         }
 
-        validateDuplicatedData(user, id);
+        validateDuplicatedData(userUpdateDto, id);
 
         User userDb = userOptional.orElseThrow();
-        userDb.setUsername(user.getUsername());
-        userDb.setEmail(user.getEmail());
-        //userDb.setPassword(user.getPassword());
+        //userDb.setUsername(userUpdateDto.username());
+        //userDb.setEmail(userUpdateDto.email());
+        //userDb.setPassword(userUpdateDto.password());
+        // mapstruct para actualizar el objeto userDb con los valores del DTO userUpdateDto, sin necesidad de escribir manualmente cada asignación de campo, 
+        // lo que reduce el código repetitivo y mejora la mantenibilidad del código, además de evitar errores humanos al asignar los campos incorrectamente
+        userMapper.updateEntityFromDto(userUpdateDto, userDb);
         return Optional.of(this.userRepository.save(userDb));
     }
 
     private void validateDuplicatedData(User user, Long excludedUserId) {
+        validateDuplicatedData(user.getUsername(), user.getEmail(), excludedUserId);
+    }
+
+    private void validateDuplicatedData(UserUpdateDto userUpdateDto, Long excludedUserId) {
+        validateDuplicatedData(userUpdateDto.username(), userUpdateDto.email(), excludedUserId);
+    }
+
+    private void validateDuplicatedData(String username, String email, Long excludedUserId) {
         List<DuplicateField> duplicateFields = new ArrayList<>();
 
-        if (isUsernameTaken(user.getUsername(), excludedUserId)) {
-            duplicateFields.add(new DuplicateField("username", "El nombre de usuario '" + user.getUsername() + "' ya existe"));
+        if (isUsernameTaken(username, excludedUserId)) {
+            duplicateFields.add(new DuplicateField("username", "El nombre de usuario '" + username + "' ya existe"));
         }
 
-        if (isEmailTaken(user.getEmail(), excludedUserId)) {
-            duplicateFields.add(new DuplicateField("email", "El correo '" + user.getEmail() + "' ya existe"));
+        if (isEmailTaken(email, excludedUserId)) {
+            duplicateFields.add(new DuplicateField("email", "El correo '" + email + "' ya existe"));
         }
 
         if (!duplicateFields.isEmpty()) {
