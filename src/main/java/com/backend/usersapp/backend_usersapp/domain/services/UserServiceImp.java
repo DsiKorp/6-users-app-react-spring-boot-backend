@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,8 @@ import dev.langchain4j.agent.tool.Tool;
 public class UserServiceImp implements UserService {
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -31,16 +34,17 @@ public class UserServiceImp implements UserService {
     @Transactional
     public User save(User user) {
         validateDuplicatedData(user, null);
-
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         return user;
     }
 
     @Override
     @Transactional(readOnly = true)
-    // @Tool para indicar que este método es una herramienta que puede ser utilizada por el agente de IA para responder a las solicitudes de los usuarios, 
+    // @Tool para indicar que este método es una herramienta que puede ser utilizada
+    // por el agente de IA para responder a las solicitudes de los usuarios,
     // en este caso, para buscar todos los usuarios disponibles en la plataforma
-    @Tool("Buscar todos los usuarios que dentro de la plataforma")
+    @Tool("Buscar todos los usuarios que hay dentro de la plataforma")
     public List<User> findAll() {
         return (List<User>) userRepository.findAll();
     }
@@ -62,11 +66,14 @@ public class UserServiceImp implements UserService {
         validateDuplicatedData(userUpdateDto, id);
 
         User userDb = userOptional.orElseThrow();
-        //userDb.setUsername(userUpdateDto.username());
-        //userDb.setEmail(userUpdateDto.email());
-        //userDb.setPassword(userUpdateDto.password());
-        // mapstruct para actualizar el objeto userDb con los valores del DTO userUpdateDto, sin necesidad de escribir manualmente cada asignación de campo, 
-        // lo que reduce el código repetitivo y mejora la mantenibilidad del código, además de evitar errores humanos al asignar los campos incorrectamente
+        // userDb.setUsername(userUpdateDto.username());
+        // userDb.setEmail(userUpdateDto.email());
+        // userDb.setPassword(userUpdateDto.password());
+        // mapstruct para actualizar el objeto userDb con los valores del DTO
+        // userUpdateDto, sin necesidad de escribir manualmente cada asignación de
+        // campo,
+        // lo que reduce el código repetitivo y mejora la mantenibilidad del código,
+        // además de evitar errores humanos al asignar los campos incorrectamente
         userMapper.updateEntityFromDto(userUpdateDto, userDb);
         return Optional.of(this.userRepository.save(userDb));
     }

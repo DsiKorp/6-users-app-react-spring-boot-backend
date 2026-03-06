@@ -67,6 +67,8 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
             List<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
+            // password no es necesario por que se esta validando el token, no para validar
+            // el usuario
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, null,
                     authorities);
             SecurityContextHolder.getContext().setAuthentication(authToken);
