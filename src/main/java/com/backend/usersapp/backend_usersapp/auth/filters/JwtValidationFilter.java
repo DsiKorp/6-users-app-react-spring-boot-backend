@@ -22,6 +22,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import static com.backend.usersapp.backend_usersapp.auth.TokenJwtConfig.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+
 public class JwtValidationFilter extends BasicAuthenticationFilter {
 
     private String secret;
@@ -34,7 +39,7 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        String header = request.getHeader("Authorization");
+        String header = request.getHeader(HEADER_AUTHORIZATION);
 
         logger.info("header " + header);
 
@@ -46,24 +51,18 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
         String token = header.replace(PREFIX_TOKEN, "");
         logger.info("token " + token);
 
-        byte[] tokenDecodedBytes = Base64.getDecoder().decode(token);
+        try {
+            SecretKey secretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
 
-        String tokenDecodedString = new String(tokenDecodedBytes);
+            Claims claims = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
 
-        logger.info("tokenDecodedString " + tokenDecodedString);
+            String username = claims.getSubject();
+            logger.info("username " + username);
 
-        String[] tokenParts = tokenDecodedString.split("\\.");
-        logger.info("tokenParts " + tokenParts.length);
-
-        String secretToken = tokenParts[0];
-        String username = tokenParts[1];
-        logger.info("secretToken " + secretToken);
-        logger.info("username " + username);
-
-        logger.info("secret " + secret);
-        logger.info("secretToken " + secretToken);
-
-        if (secret.equals(secretToken)) {
             List<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
@@ -73,10 +72,10 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
                     authorities);
             SecurityContextHolder.getContext().setAuthentication(authToken);
             chain.doFilter(request, response);
-        } else {
+        } catch (Exception e) {
             Map<String, Object> body = new HashMap<>();
-            body.put("message", "Error en la autenticacion username o password incorrecto!");
-            // body.put("error", failed.getMessage());
+            body.put("message", "Token no valido");
+            body.put("error", e.getMessage());
 
             response.getWriter().write(new ObjectMapper().writeValueAsString(body));
             response.setStatus(401);

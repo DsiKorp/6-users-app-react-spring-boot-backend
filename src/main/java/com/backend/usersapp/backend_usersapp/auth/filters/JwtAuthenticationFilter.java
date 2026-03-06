@@ -11,6 +11,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+import java.util.Date;
+
 import static com.backend.usersapp.backend_usersapp.auth.TokenJwtConfig.*;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
 import com.fasterxml.jackson.core.exc.StreamReadException;
@@ -69,9 +74,16 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
         String username = ((org.springframework.security.core.userdetails.User) authResult.getPrincipal())
                 .getUsername();
-        String originalInput = secret + "." + username;
-        logger.info("originalInput " + originalInput);
-        String token = Base64.getEncoder().encodeToString(originalInput.getBytes());
+
+        SecretKey secretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
+        logger.info("secretKey " + secretKey.toString());
+
+        // Generate token
+        String token = Jwts.builder()
+                .subject(username)
+                .expiration(new Date(System.currentTimeMillis() + TOKEN_EXPIRATION_TIME))
+                .signWith(secretKey)
+                .compact();
 
         logger.info("-- token " + token);
 
