@@ -14,6 +14,7 @@ public interface UserMapper {
     @Mapping(source = "email", target = "email")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "password", ignore = true)
+    @Mapping(target = "roles", ignore = true)
     void updateEntityFromDto(UserUpdateDto updateUserDto, @MappingTarget User user);
     // @MappingTarget para indicar que el segundo parámetro es el objeto que se va a actualizar con los valores del DTO, 
     // en lugar de crear un nuevo objeto user
