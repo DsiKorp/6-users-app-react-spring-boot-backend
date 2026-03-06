@@ -23,6 +23,7 @@ import static com.backend.usersapp.backend_usersapp.auth.TokenJwtConfig.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
@@ -72,7 +73,7 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
                     authorities);
             SecurityContextHolder.getContext().setAuthentication(authToken);
             chain.doFilter(request, response);
-        } catch (Exception e) {
+        } catch (JwtException e) {
             Map<String, Object> body = new HashMap<>();
             body.put("message", "Token no valido");
             body.put("error", e.getMessage());
