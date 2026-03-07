@@ -54,6 +54,14 @@ public class UserController {
         return userService.findAll();
     }
 
+    @GetMapping(value = "/admin", produces = "application/json")
+    @Operation(summary = "Get all admin users", description = "Returns the complete list of admin users.", responses = {
+        @ApiResponse(responseCode = "200", description = "Users found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User[].class)))
+    })
+    public List<User> listAdmin() {
+        return userService.findAllAdmin();
+    }
+
     /*
          * - ResponseEntity is a wrapper for the response, it allows us to return
          * different

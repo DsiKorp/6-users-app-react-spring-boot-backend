@@ -28,6 +28,7 @@ public class UserServiceImp implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -74,6 +75,12 @@ public class UserServiceImp implements UserService {
     // en este caso, para buscar todos los usuarios disponibles en la plataforma
     @Tool("Buscar todos los usuarios que hay en la base de datos de la plataforma")
     public List<User> findAll() {
+        return (List<User>) userRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<User> findAllAdmin() {
         return (List<User>) userRepository.findAll();
     }
 

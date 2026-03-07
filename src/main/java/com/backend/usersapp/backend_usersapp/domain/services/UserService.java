@@ -14,6 +14,8 @@ public interface UserService {
 
     List<User> findAll();
 
+    List<User> findAllAdmin();
+
     Optional<User> findById(Long id);
 
     void deleteById(Long id);
