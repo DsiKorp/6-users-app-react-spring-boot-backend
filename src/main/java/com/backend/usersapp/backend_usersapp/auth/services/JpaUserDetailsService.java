@@ -1,12 +1,8 @@
 package com.backend.usersapp.backend_usersapp.auth.services;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import org.springframework.transaction.annotation.Transactional;
-
-import com.backend.usersapp.backend_usersapp.reposotories.UserRepository;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -15,8 +11,10 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.backend.usersapp.backend_usersapp.reposotories.UserRepository;
 
 @Service
 public class JpaUserDetailsService implements UserDetailsService {
@@ -37,8 +35,12 @@ public class JpaUserDetailsService implements UserDetailsService {
 
         com.backend.usersapp.backend_usersapp.models.entities.User user = userOptional.orElseThrow();
 
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        // List<GrantedAuthority> authorities = new ArrayList<>();
+        // authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        List<GrantedAuthority> authorities = user.getRoles()
+                .stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
 
         return new User(
                 // username,

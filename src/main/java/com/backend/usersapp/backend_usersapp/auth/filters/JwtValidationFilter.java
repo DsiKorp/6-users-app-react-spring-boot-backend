@@ -1,36 +1,37 @@
 package com.backend.usersapp.backend_usersapp.auth.filters;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.crypto.SecretKey;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
-import static com.backend.usersapp.backend_usersapp.auth.TokenJwtConfig.*;
+import static com.backend.usersapp.backend_usersapp.auth.TokenJwtConfig.HEADER_AUTHORIZATION;
+import static com.backend.usersapp.backend_usersapp.auth.TokenJwtConfig.PREFIX_TOKEN;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import javax.crypto.SecretKey;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class JwtValidationFilter extends BasicAuthenticationFilter {
 
-    private String secret;
+    private final String secret;
 
     public JwtValidationFilter(AuthenticationManager authenticationManager, String secret) {
         super(authenticationManager);
@@ -61,11 +62,19 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
                     .parseSignedClaims(token)
                     .getPayload();
 
+            Object authoritiesClaims = claims.get("authorities");
+
             String username = claims.getSubject();
             logger.info("username " + username);
 
-            List<GrantedAuthority> authorities = new ArrayList<>();
-            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+            Collection<? extends GrantedAuthority> authorities = List.of();
+            if (authoritiesClaims instanceof Collection<?> authoritiesCollection) {
+                authorities = authoritiesCollection.stream()
+                        .map(String::valueOf)
+                        .filter(authority -> authority.startsWith("ROLE_"))
+                        .map(SimpleGrantedAuthority::new)
+                        .toList();
+            }
 
             // password no es necesario por que se esta validando el token, no para validar
             // el usuario

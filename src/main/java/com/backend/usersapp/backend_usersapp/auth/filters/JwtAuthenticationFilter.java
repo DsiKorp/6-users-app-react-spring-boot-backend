@@ -2,8 +2,10 @@ package com.backend.usersapp.backend_usersapp.auth.filters;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
@@ -12,6 +14,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static com.backend.usersapp.backend_usersapp.auth.TokenJwtConfig.HEADER_AUTHORIZATION;
@@ -63,6 +66,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             e.printStackTrace();
         }
 
+        // JpaUserDetailsService
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password);
         logger.info("authToken " + authToken.toString());
 
@@ -77,11 +81,27 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String username = ((org.springframework.security.core.userdetails.User) authResult.getPrincipal())
                 .getUsername();
 
+        Collection<? extends GrantedAuthority> roles = authResult.getAuthorities();
+
+        List<String> roleAuthorities = roles.stream()
+            .map(GrantedAuthority::getAuthority)
+            .filter(authority -> authority != null && authority.startsWith("ROLE_"))
+            .distinct()
+            .toList();
+
+        boolean isAdmin = roleAuthorities.contains("ROLE_ADMIN");
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("authorities", roleAuthorities);
+        claims.put("isAdmin", isAdmin);
+        claims.put("username", username);
+
         SecretKey secretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
         logger.info("secretKey " + secretKey.toString());
 
         // Generate token
         String token = Jwts.builder()
+                .claims(claims)
                 .subject(username)
                 .expiration(new Date(System.currentTimeMillis() + TOKEN_EXPIRATION_TIME))
                 .signWith(secretKey)
