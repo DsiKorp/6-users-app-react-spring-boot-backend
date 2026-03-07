@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.backend.usersapp.backend_usersapp.domain.dto.SuggestRequestDto;
+import com.backend.usersapp.backend_usersapp.domain.dto.UserDto;
 import com.backend.usersapp.backend_usersapp.domain.dto.UserUpdateDto;
 import com.backend.usersapp.backend_usersapp.domain.services.GreetingAiService;
 import com.backend.usersapp.backend_usersapp.domain.services.UserService;
@@ -50,7 +51,7 @@ public class UserController {
     @Operation(summary = "Get all users", description = "Returns the complete list of users.", responses = {
         @ApiResponse(responseCode = "200", description = "Users found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User[].class)))
     })
-    public List<User> list() {
+    public List<UserDto> list() {
         return userService.findAll();
     }
 
@@ -82,9 +83,9 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "User found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
         @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
-    public ResponseEntity<User> show(
+    public ResponseEntity<UserDto> show(
             @Parameter(description = "ID of the user to be retrieved", example = "1") @PathVariable(name = "id") Long id) {
-        Optional<User> userOptional = userService.findById(id);
+        Optional<UserDto> userOptional = userService.findById(id);
 
         if (userOptional.isPresent()) {
             return ResponseEntity.ok(userOptional.orElseThrow()); // 200 OK
@@ -96,7 +97,7 @@ public class UserController {
 
     @GetMapping(value = "/admin/{id}", produces = "application/json")
     @Operation(summary = "Get an admin user by its identifier", description = "Returns an admin user that matches the sent identifier.", responses = {
-        @ApiResponse(responseCode = "200", description = "User found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
+        @ApiResponse(responseCode = "200", description = "User found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
         @ApiResponse(responseCode = "404", description = "User not found", content = @Content)
     })
     public ResponseEntity<User> showAdmin(
@@ -125,13 +126,13 @@ public class UserController {
             @ExampleObject(name = "Solo username duplicado", value = "{\n  \"type\": \"duplicate-data-error\",\n  \"message\": \"Se encontraron datos de usuario ya registrados\",\n  \"errors\": [\n    {\n      \"field\": \"username\",\n      \"message\": \"El nombre de usuario 'hola2' ya existe\"\n    }\n  ]\n}")
         }))
     })
-    public ResponseEntity<User> create(@RequestBody @Valid User user) {
+    public ResponseEntity<UserDto> create(@RequestBody @Valid User user) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(user)); // 201 Created
     }
 
     @PostMapping(value = "/admin", produces = "application/json")
     @Operation(summary = "Create a new admin user", description = "Creates an admin user with the provided information.", responses = {
-        @ApiResponse(responseCode = "201", description = "Admin user created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
+        @ApiResponse(responseCode = "201", description = "Admin user created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))),
         @ApiResponse(responseCode = "400", description = "Validation error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationErrorResponse.class))),
         @ApiResponse(responseCode = "409", description = "Username or email already exists", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ValidationErrorResponse.class), examples = {
             @ExampleObject(name = "Username y email duplicados", value = "{\n  \"type\": \"duplicate-data-error\",\n  \"message\": \"Se encontraron datos de usuario ya registrados\",\n  \"errors\": [\n    {\n      \"field\": \"username\",\n      \"message\": \"El nombre de usuario 'hola2' ya existe\"\n    },\n    {\n      \"field\": \"email\",\n      \"message\": \"El correo 'hola2@mail.com' ya existe\"\n    }\n  ]\n}"),
@@ -161,9 +162,9 @@ public class UserController {
             @ExampleObject(name = "Solo email duplicado", value = "{\n  \"type\": \"duplicate-data-error\",\n  \"message\": \"Se encontraron datos de usuario ya registrados\",\n  \"errors\": [\n    {\n      \"field\": \"email\",\n      \"message\": \"El correo 'hola2@mail.com' ya existe\"\n    }\n  ]\n}")
         }))
     })
-    public ResponseEntity<User> update(@RequestBody @Valid UserUpdateDto userUpdateDto,
+    public ResponseEntity<UserDto> update(@RequestBody @Valid UserUpdateDto userUpdateDto,
             @Parameter(description = "ID of the user to be updated", example = "1") @PathVariable Long id) {
-        Optional<User> userOptional = userService.update(userUpdateDto, id);
+        Optional<UserDto> userOptional = userService.update(userUpdateDto, id);
         if (userOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(userOptional.orElseThrow()); // 201
             // Created

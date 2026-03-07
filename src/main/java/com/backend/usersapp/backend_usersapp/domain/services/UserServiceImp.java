@@ -11,12 +11,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.backend.usersapp.backend_usersapp.domain.dto.UserDto;
 import com.backend.usersapp.backend_usersapp.domain.dto.UserUpdateDto;
 import com.backend.usersapp.backend_usersapp.domain.exception.DuplicateUserFieldsException;
 import com.backend.usersapp.backend_usersapp.domain.exception.DuplicateUserFieldsException.DuplicateField;
 import com.backend.usersapp.backend_usersapp.domain.exception.UserNotFoundException;
 import com.backend.usersapp.backend_usersapp.models.entities.Role;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
+import com.backend.usersapp.backend_usersapp.persistence.mapper.DtoMapperUser;
 import com.backend.usersapp.backend_usersapp.persistence.mapper.UserMapper;
 import com.backend.usersapp.backend_usersapp.reposotories.RoleRepository;
 import com.backend.usersapp.backend_usersapp.reposotories.UserRepository;
@@ -40,7 +42,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     @Transactional
-    public User save(User user) {
+    public UserDto save(User user) {
         validateDuplicatedData(user, null);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
@@ -65,7 +67,7 @@ public class UserServiceImp implements UserService {
         }
 
         userRepository.save(user);
-        return user;
+        return DtoMapperUser.builder().setUser(user).build();
     }
 
     @Override
@@ -104,8 +106,12 @@ public class UserServiceImp implements UserService {
     // por el agente de IA para responder a las solicitudes de los usuarios,
     // en este caso, para buscar todos los usuarios disponibles en la plataforma
     @Tool("Buscar todos los usuarios que hay en la base de datos de la plataforma")
-    public List<User> findAll() {
-        return (List<User>) userRepository.findAll();
+    public List<UserDto> findAll() {
+        List<User> users = (List<User>) userRepository.findAll();
+
+        return users.stream()
+                .map(user -> DtoMapperUser.builder().setUser(user).build())
+                .toList();
     }
 
     @Override
@@ -116,8 +122,15 @@ public class UserServiceImp implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
+    public Optional<UserDto> findById(Long id) {
+        Optional<User> userOptional = userRepository.findById(id);
+
+        if (userOptional.isPresent()) {
+            return userOptional.of(
+                    DtoMapperUser.builder().setUser(userOptional.orElseThrow()).build());
+        }
+
+        return userOptional.empty();
     }
 
     @Override
@@ -128,8 +141,8 @@ public class UserServiceImp implements UserService {
 
     @Override
     @Transactional
-    public Optional<User> update(UserUpdateDto userUpdateDto, Long id) {
-        Optional<User> userOptional = this.findById(id);
+    public Optional<UserDto> update(UserUpdateDto userUpdateDto, Long id) {
+        Optional<User> userOptional = this.userRepository.findById(id);
         if (userOptional.isEmpty()) {
             throw new UserNotFoundException(id);
         }
@@ -146,7 +159,7 @@ public class UserServiceImp implements UserService {
         // lo que reduce el código repetitivo y mejora la mantenibilidad del código,
         // además de evitar errores humanos al asignar los campos incorrectamente
         userMapper.updateEntityFromDto(userUpdateDto, userDb);
-        return Optional.of(this.userRepository.save(userDb));
+        return Optional.of(DtoMapperUser.builder().setUser(this.userRepository.save(userDb)).build());
     }
 
     @Override
