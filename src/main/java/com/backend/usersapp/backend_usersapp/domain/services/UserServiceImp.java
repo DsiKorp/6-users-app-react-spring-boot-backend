@@ -69,6 +69,36 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    @Transactional
+    public User saveAdmin(User user) {
+        validateDuplicatedData(user, null);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        Set<Role> roles = new HashSet<>();
+
+        // Si no llega ningún rol, asignar ROLE_USER por defecto.
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            Role defaultRole = roleRepository.findFirstByName("ROLE_USER")
+                    .orElseThrow(() -> new IllegalStateException("El rol por defecto ROLE_USER no existe"));
+
+            roles.add(defaultRole);
+            user.setRoles(roles);
+        } else {
+            // Validar y reemplazar por roles persistidos de BD.
+            for (Role role : user.getRoles()) {
+                Role persistedRole = roleRepository.findFirstByName(role.getName())
+                        .orElseThrow(() -> new IllegalArgumentException("El rol " + role.getName() + " no existe"));
+                roles.add(persistedRole);
+            }
+
+            user.setRoles(roles);
+        }
+
+        userRepository.save(user);
+        return user;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     // @Tool para indicar que este método es una herramienta que puede ser utilizada
     // por el agente de IA para responder a las solicitudes de los usuarios,
@@ -91,9 +121,38 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<User> findByIdAdmin(Long id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
     @Transactional
     public Optional<User> update(UserUpdateDto userUpdateDto, Long id) {
         Optional<User> userOptional = this.findById(id);
+        if (userOptional.isEmpty()) {
+            throw new UserNotFoundException(id);
+        }
+
+        validateDuplicatedData(userUpdateDto, id);
+
+        User userDb = userOptional.orElseThrow();
+        // userDb.setUsername(userUpdateDto.username());
+        // userDb.setEmail(userUpdateDto.email());
+        // userDb.setPassword(userUpdateDto.password());
+        // mapstruct para actualizar el objeto userDb con los valores del DTO
+        // userUpdateDto, sin necesidad de escribir manualmente cada asignación de
+        // campo,
+        // lo que reduce el código repetitivo y mejora la mantenibilidad del código,
+        // además de evitar errores humanos al asignar los campos incorrectamente
+        userMapper.updateEntityFromDto(userUpdateDto, userDb);
+        return Optional.of(this.userRepository.save(userDb));
+    }
+
+    @Override
+    @Transactional
+    public Optional<User> updateAdmin(UserUpdateDto userUpdateDto, Long id) {
+        Optional<User> userOptional = this.findByIdAdmin(id);
         if (userOptional.isEmpty()) {
             throw new UserNotFoundException(id);
         }

@@ -10,13 +10,19 @@ public interface UserService {
 
     User save(User user);
 
+    User saveAdmin(User user);
+
     Optional<User> update(UserUpdateDto userUpdateDto, Long id);
+
+    Optional<User> updateAdmin(UserUpdateDto userUpdateDto, Long id);
 
     List<User> findAll();
 
     List<User> findAllAdmin();
 
     Optional<User> findById(Long id);
+
+    Optional<User> findByIdAdmin(Long id);
 
     void deleteById(Long id);
 }
