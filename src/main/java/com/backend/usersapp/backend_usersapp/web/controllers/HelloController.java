@@ -16,8 +16,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/hello")
-//@CrossOrigin(origins = "http://localhost:5173")
-@CrossOrigin(originPatterns = "*", allowCredentials = "true")
+@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 @Tag(name = "Hello", description = "hello-controller: Greeting endpoint")
 public class HelloController {
 
