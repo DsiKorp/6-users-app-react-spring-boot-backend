@@ -13,11 +13,14 @@ public record UserUpdateDto(
         @JsonAlias({"userName"})
         @Size(min = 4, max = 40, message = "El username debe tener entre 4 y 40 caracteres")
         String username,
+        //************************************************************************//
         @NotBlank(message = "El email es obligatorio")
         @JsonAlias({"eMail"})
         @Email(message = "El email no es válido")
         @Size(max = 100, message = "El email no puede tener más de 100 caracteres")
-        String email
+        String email,
+        //////////////////////////////////////////////////////////////////////////////
+        Boolean admin
         ) {
 
 }

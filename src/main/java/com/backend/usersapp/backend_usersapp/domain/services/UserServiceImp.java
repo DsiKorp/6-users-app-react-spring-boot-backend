@@ -46,25 +46,8 @@ public class UserServiceImp implements UserService {
         validateDuplicatedData(user, null);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        Set<Role> roles = new HashSet<>();
-
-        // Si no llega ningún rol, asignar ROLE_USER por defecto.
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            Role defaultRole = roleRepository.findFirstByName("ROLE_USER")
-                    .orElseThrow(() -> new IllegalStateException("El rol por defecto ROLE_USER no existe"));
-
-            roles.add(defaultRole);
-            user.setRoles(roles);
-        } else {
-            // Validar y reemplazar por roles persistidos de BD.
-            for (Role role : user.getRoles()) {
-                Role persistedRole = roleRepository.findFirstByName(role.getName())
-                        .orElseThrow(() -> new IllegalArgumentException("El rol " + role.getName() + " no existe"));
-                roles.add(persistedRole);
-            }
-
-            user.setRoles(roles);
-        }
+        user = setRolesForCreateUser(user);
+        System.out.println(user.isAdmin());
 
         userRepository.save(user);
         return DtoMapperUser.builder().setUser(user).build();
@@ -76,25 +59,7 @@ public class UserServiceImp implements UserService {
         validateDuplicatedData(user, null);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        Set<Role> roles = new HashSet<>();
-
-        // Si no llega ningún rol, asignar ROLE_USER por defecto.
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            Role defaultRole = roleRepository.findFirstByName("ROLE_USER")
-                    .orElseThrow(() -> new IllegalStateException("El rol por defecto ROLE_USER no existe"));
-
-            roles.add(defaultRole);
-            user.setRoles(roles);
-        } else {
-            // Validar y reemplazar por roles persistidos de BD.
-            for (Role role : user.getRoles()) {
-                Role persistedRole = roleRepository.findFirstByName(role.getName())
-                        .orElseThrow(() -> new IllegalArgumentException("El rol " + role.getName() + " no existe"));
-                roles.add(persistedRole);
-            }
-
-            user.setRoles(roles);
-        }
+        user = setRolesForCreateUser(user);
 
         userRepository.save(user);
         return user;
@@ -152,6 +117,9 @@ public class UserServiceImp implements UserService {
         // lo que reduce el código repetitivo y mejora la mantenibilidad del código,
         // además de evitar errores humanos al asignar los campos incorrectamente
         userMapper.updateEntityFromDto(userUpdateDto, userDb);
+
+        userDb = setRolesForUpdateUser(userDb, userUpdateDto.admin());
+
         return Optional.of(DtoMapperUser.builder().setUser(this.userRepository.save(userDb)).build());
     }
 
@@ -175,6 +143,7 @@ public class UserServiceImp implements UserService {
         // lo que reduce el código repetitivo y mejora la mantenibilidad del código,
         // además de evitar errores humanos al asignar los campos incorrectamente
         userMapper.updateEntityFromDto(userUpdateDto, userDb);
+        userDb = setRolesForUpdateUser(userDb, userUpdateDto.admin());
         return Optional.of(this.userRepository.save(userDb));
     }
 
@@ -226,6 +195,52 @@ public class UserServiceImp implements UserService {
         }
 
         userRepository.deleteById(id);
+    }
+
+    private User setRolesForCreateUser(User user) {
+        Set<Role> roles = new HashSet<>();
+        // Si no llega ningún rol, asignar ROLE_USER por defecto.
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            Role defaultRole = roleRepository.findFirstByName("ROLE_USER")
+                    .orElseThrow(() -> new IllegalStateException("El rol por defecto ROLE_USER no existe"));
+            roles.add(defaultRole);
+        } else {
+            // Validar y reemplazar por roles persistidos de BD.
+            for (Role role : user.getRoles()) {
+                Role persistedRole = roleRepository.findFirstByName(role.getName())
+                        .orElseThrow(() -> new IllegalArgumentException("El rol " + role.getName() + " no existe"));
+                roles.add(persistedRole);
+            }
+        }
+
+        if (user.isAdminFlag()) {
+            Role adminRole = roleRepository.findFirstByName("ROLE_ADMIN")
+                    .orElseThrow(() -> new IllegalStateException("El rol ROLE_ADMIN no existe"));
+            if (!roles.contains(adminRole)) {
+                roles.add(adminRole);
+            }
+        } else {
+            // Si el admin se desmarca, eliminar el rol ROLE_ADMIN del usuario
+            roles.removeIf(role -> role.getName().equals("ROLE_ADMIN"));
+        }
+
+        user.setRoles(roles);
+        return user;
+    }
+
+    private User setRolesForUpdateUser(User userDb, boolean isAdmin) {
+        if (isAdmin) {
+            Role adminRole = roleRepository.findFirstByName("ROLE_ADMIN")
+                    .orElseThrow(() -> new IllegalStateException("El rol ROLE_ADMIN no existe"));
+            if (!userDb.getRoles().contains(adminRole)) {
+                userDb.getRoles().add(adminRole);
+            }
+        } else {
+            // Si el admin se desmarca, eliminar el rol ROLE_ADMIN del usuario
+            userDb.getRoles().removeIf(role -> role.getName().equals("ROLE_ADMIN"));
+        }
+
+        return userDb;
     }
 
 }

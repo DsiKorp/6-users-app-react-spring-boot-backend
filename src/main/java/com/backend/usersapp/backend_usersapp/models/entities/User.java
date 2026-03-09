@@ -3,6 +3,8 @@ package com.backend.usersapp.backend_usersapp.models.entities;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,10 +15,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "users")
@@ -44,8 +47,11 @@ public class User {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"), uniqueConstraints = @UniqueConstraint(columnNames = {
-            "user_id", "role_id" }))
+        "user_id", "role_id"}))
     private Set<Role> roles = new HashSet<>();
+
+    @Transient // No se mapea a la base de datos, solo se usa para recibir el valor del admin en el DTO
+    private boolean admin;
 
     public User() {
     }
@@ -99,9 +105,25 @@ public class User {
         this.roles = roles;
     }
 
+    public boolean isAdmin() {
+        boolean hasAdminRole = roles != null
+                && roles.stream().anyMatch(role -> "ROLE_ADMIN".equals(role.getName()));
+        return admin || hasAdminRole;
+    }
+
+    @JsonIgnore
+    public boolean isAdminFlag() {
+        return admin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
+    }
+
     @Override
     public String toString() {
         return "User [id=" + id + ", username=" + username + ", email=" + email + ", password=" + password + ", roles="
-                + roles + "]";
+                + roles + ", admin=" + admin + "]";
     }
+
 }
