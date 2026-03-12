@@ -2,6 +2,8 @@ package com.backend.usersapp.backend_usersapp.reposotories;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -30,4 +32,6 @@ public interface UserRepository extends CrudRepository<User, Long> {
     // @Query("SELECT u FROM User u WHERE u.username = ?1")
     @Query("SELECT u FROM User u WHERE u.username = :username")
     Optional<User> getUserByUsername(String username);
+
+    Page<User> findAll(Pageable pageable);
 }

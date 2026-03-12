@@ -3,6 +3,9 @@ package com.backend.usersapp.backend_usersapp.domain.services;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.backend.usersapp.backend_usersapp.domain.dto.UserDto;
 import com.backend.usersapp.backend_usersapp.domain.dto.UserUpdateDto;
 import com.backend.usersapp.backend_usersapp.models.entities.User;
@@ -19,6 +22,8 @@ public interface UserService {
 
     List<UserDto> findAll();
 
+    Page<UserDto> findAll(Pageable pageable);
+
     List<User> findAllAdmin();
 
     Optional<UserDto> findById(Long id);
@@ -26,4 +31,5 @@ public interface UserService {
     Optional<User> findByIdAdmin(Long id);
 
     void deleteById(Long id);
+
 }

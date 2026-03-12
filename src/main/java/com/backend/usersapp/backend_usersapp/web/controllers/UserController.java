@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -52,7 +55,22 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "Users found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User[].class)))
     })
     public List<UserDto> list() {
+        // try {
+        //     Thread.sleep(4000l);
+        // } catch (InterruptedException e) {
+        //     e.printStackTrace();
+        // }
+
         return userService.findAll();
+    }
+
+    @GetMapping(value = "/page/{page}", produces = "application/json")
+    @Operation(summary = "Get paginated users", description = "Returns a paginated list of users.", responses = {
+        @ApiResponse(responseCode = "200", description = "Users found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
+    })
+    public Page<UserDto> list(@Parameter(description = "Page number (0-indexed)", example = "0") @PathVariable Integer page) {
+        Pageable pageable = PageRequest.of(page, 5);
+        return userService.findAll(pageable);
     }
 
     @GetMapping(value = "/admin", produces = "application/json")

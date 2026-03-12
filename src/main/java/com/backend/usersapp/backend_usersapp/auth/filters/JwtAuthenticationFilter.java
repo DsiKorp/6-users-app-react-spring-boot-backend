@@ -78,16 +78,22 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
             Authentication authResult) throws IOException, ServletException {
 
+        // try {
+        //     Thread.sleep(4000l);
+        // } catch (InterruptedException e) {
+        //     e.printStackTrace();
+        // }
+
         String username = ((org.springframework.security.core.userdetails.User) authResult.getPrincipal())
                 .getUsername();
 
         Collection<? extends GrantedAuthority> roles = authResult.getAuthorities();
 
         List<String> roleAuthorities = roles.stream()
-            .map(GrantedAuthority::getAuthority)
-            .filter(authority -> authority != null && authority.startsWith("ROLE_"))
-            .distinct()
-            .toList();
+                .map(GrantedAuthority::getAuthority)
+                .filter(authority -> authority != null && authority.startsWith("ROLE_"))
+                .distinct()
+                .toList();
 
         boolean isAdmin = roleAuthorities.contains("ROLE_ADMIN");
 
